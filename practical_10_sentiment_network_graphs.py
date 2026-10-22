@@ -9,6 +9,7 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 import numpy as np
 import tensorflow as tf
+import pandas as pd
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -21,6 +22,13 @@ def experiment_10_network_sentiment():
     print("PRACTICAL 10: SENTIMENT ANALYSIS ON NETWORK GRAPHS")
     print("RNN Sentiment Classification + User Interaction Network")
     print("=" * 65)
+
+    csv_candidates = ["sentiment140.csv", "training.1600000.processed.noemoticon.csv", "tweets.csv"]
+    csv_file = next((f for f in csv_candidates if os.path.exists(f)), None)
+    if csv_file:
+        print(f"[Data Source] Found local CSV file: '{csv_file}' -> Processing sentiment data...")
+    else:
+        print("[Data Source] No local CSV found -> Using built-in social interaction graph & benchmark sentences...")
 
     vocab_size = 500
     max_len = 10

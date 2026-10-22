@@ -48,6 +48,9 @@ def experiment_5_imdb_rnn_lstm_gru():
     vocab_size = 10000
     max_length = 200
     (x_train, y_train), (x_test, y_test) = keras.datasets.imdb.load_data(num_words=vocab_size)
+    # Fast demonstration subset for quick lab execution
+    x_train, y_train = x_train[:3000], y_train[:3000]
+    x_test, y_test = x_test[:800], y_test[:800]
     x_train = keras.utils.pad_sequences(x_train, maxlen=max_length, padding="post", truncating="post")
     x_test = keras.utils.pad_sequences(x_test, maxlen=max_length, padding="post", truncating="post")
 

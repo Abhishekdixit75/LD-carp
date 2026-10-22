@@ -11,6 +11,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
 
 np.random.seed(42)
@@ -23,17 +25,35 @@ def experiment_24_anomaly_detection():
     print("Fraud Detection via High Reconstruction Error")
     print("=" * 65)
 
-    num_features = 20
-    num_normal = 2000
-    num_fraud = 100
+    csv_candidates = ["creditcard.csv", "credit_card_fraud.csv", "fraud.csv", "transactions.csv"]
+    csv_file = next((f for f in csv_candidates if os.path.exists(f)), None)
 
-    # 1. Synthesize normal (Gaussian N(0, 1)) vs fraudulent (shifted variance/mean) transactions
-    x_normal = np.random.normal(0.0, 1.0, (num_normal, num_features)).astype("float32")
-    x_fraud = np.random.normal(2.5, 2.0, (num_fraud, num_features)).astype("float32")
+    if csv_file:
+        print(f"[Data Source] Found local CSV file: '{csv_file}' -> Training on CSV transactions...")
+        df = pd.read_csv(csv_file).dropna()
+        target_col = "Class" if "Class" in df.columns else df.columns[-1]
+        features = df.drop(columns=[target_col]).select_dtypes(include=[np.number])
+        scaler = StandardScaler()
+        norm_features = scaler.fit_transform(features).astype("float32")
 
+        normal_mask = (df[target_col] == 0).values
+        fraud_mask = (df[target_col] == 1).values
+
+        x_normal = norm_features[normal_mask][:2000]
+        x_fraud = norm_features[fraud_mask][:100]
+    else:
+        print("[Data Source] No local CSV found -> Generating synthetic Credit Card Fraud dataset...")
+        num_features = 20
+        num_normal = 2000
+        num_fraud = 100
+        x_normal = np.random.normal(0.0, 1.0, (num_normal, num_features)).astype("float32")
+        x_fraud = np.random.normal(2.5, 2.0, (num_fraud, num_features)).astype("float32")
+
+    num_features = x_normal.shape[1]
     # Split: Train ONLY on normal data (semi-supervised anomaly detection)
-    x_train_normal = x_normal[:1500]
-    x_test_normal = x_normal[1500:]
+    train_count = int(len(x_normal) * 0.75)
+    x_train_normal = x_normal[:train_count]
+    x_test_normal = x_normal[train_count:]
 
     # Test set combines remaining normal + all fraudulent transactions
     x_test = np.vstack([x_test_normal, x_fraud])

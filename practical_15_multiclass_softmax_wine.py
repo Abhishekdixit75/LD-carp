@@ -11,6 +11,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+import pandas as pd
 from sklearn.datasets import load_wine
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -26,14 +27,29 @@ def experiment_15_wine_classification():
     print("Wine Dataset (3 Classes) with Categorical Cross-Entropy")
     print("=" * 65)
 
-    data = load_wine()
+    csv_candidates = ["wine.csv", "winequality.csv", "wine_data.csv", "data.csv"]
+    csv_file = next((f for f in csv_candidates if os.path.exists(f)), None)
+
+    if csv_file:
+        print(f"[Data Source] Found local CSV file: '{csv_file}' -> Training on CSV data...")
+        df = pd.read_csv(csv_file).dropna()
+        target_cols = [c for c in ["target", "class", "label", "Wine", "quality"] if c in df.columns]
+        target_col = target_cols[0] if target_cols else df.columns[-1]
+        y_raw = pd.factorize(df[target_col])[0]
+        x_raw = df.drop(columns=[target_col]).select_dtypes(include=[np.number]).values
+    else:
+        print("[Data Source] No local CSV found -> Using scikit-learn Wine dataset...")
+        data = load_wine()
+        x_raw, y_raw = data.data, data.target
+
+    num_classes = len(np.unique(y_raw))
     x_train, x_test, y_train, y_test = train_test_split(
-        data.data, data.target, test_size=0.2, random_state=42, stratify=data.target
+        x_raw, y_raw, test_size=0.2, random_state=42, stratify=y_raw
     )
     scaler = StandardScaler()
     x_train = scaler.fit_transform(x_train).astype("float32")
     x_test = scaler.transform(x_test).astype("float32")
-    y_train_onehot = keras.utils.to_categorical(y_train, num_classes=3)
+    y_train_onehot = keras.utils.to_categorical(y_train, num_classes=num_classes)
 
     model = keras.Sequential([
         keras.Input(shape=(x_train.shape[1],)),

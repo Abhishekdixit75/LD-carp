@@ -11,6 +11,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 np.random.seed(42)
@@ -23,18 +24,27 @@ def experiment_16_time_series_lstm():
     print("Forecasting Temperature from Previous 24 Hourly Readings")
     print("=" * 65)
 
-    # Generate synthetic hourly temperature series (simulating Jena climate)
-    total_hours = 2000
-    t = np.arange(total_hours)
-    # Seasonal daily cycle (24h period) + annual trend + random noise
-    temperature = 15.0 + 8.0 * np.sin(2 * np.pi * t / 24.0) + 0.005 * t + np.random.normal(0, 1.0, total_hours)
-    temperature = temperature.astype("float32")
+    csv_candidates = ["jena_climate_2009_2016.csv", "jena_climate.csv", "temperature.csv", "climate.csv"]
+    csv_file = next((f for f in csv_candidates if os.path.exists(f)), None)
+
+    if csv_file:
+        print(f"[Data Source] Found local CSV file: '{csv_file}' -> Training on CSV time series...")
+        df = pd.read_csv(csv_file)
+        temp_cols = [c for c in df.columns if "T (degC)" in c or "temp" in c.lower() or "temperature" in c.lower()]
+        target_col = temp_cols[0] if temp_cols else df.select_dtypes(include=[np.number]).columns[0]
+        temperature = df[target_col].dropna().values[:2500].astype("float32")
+    else:
+        print("[Data Source] No local CSV found -> Generating synthetic hourly temperature series (Jena climate)...")
+        total_hours = 2000
+        t = np.arange(total_hours)
+        temperature = 15.0 + 8.0 * np.sin(2 * np.pi * t / 24.0) + 0.005 * t + np.random.normal(0, 1.0, total_hours)
+        temperature = temperature.astype("float32")
 
     sequence_length = 24
     # Normalize
-    split_point = int(total_hours * 0.8)
+    split_point = int(len(temperature) * 0.8)
     mean, std = temperature[:split_point].mean(), temperature[:split_point].std()
-    norm_temp = (temperature - mean) / std
+    norm_temp = (temperature - mean) / (std + 1e-7)
 
     # Create sliding windows
     x, y = [], []
