@@ -11,6 +11,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+import pandas as pd
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -26,9 +27,27 @@ def experiment_14_breast_cancer():
     print("Feedforward Deep Neural Network with Binary Cross-Entropy")
     print("=" * 65)
 
-    data = load_breast_cancer()
+    csv_candidates = ["breast_cancer.csv", "cancer.csv", "data.csv", "wdbc.data.csv"]
+    csv_file = next((f for f in csv_candidates if os.path.exists(f)), None)
+
+    if csv_file:
+        print(f"[Data Source] Found local CSV file: '{csv_file}' -> Training on CSV data...")
+        df = pd.read_csv(csv_file).dropna()
+        target_cols = [c for c in ["diagnosis", "target", "class", "label", "Outcome"] if c in df.columns]
+        target_col = target_cols[0] if target_cols else df.columns[-1]
+        y_series = df[target_col]
+        if y_series.dtype == object:
+            y_raw = y_series.map({"M": 0, "B": 1, "malignant": 0, "benign": 1}).fillna(0).values
+        else:
+            y_raw = y_series.values
+        x_raw = df.drop(columns=[target_col]).select_dtypes(include=[np.number]).values
+    else:
+        print("[Data Source] No local CSV found -> Using scikit-learn Wisconsin Breast Cancer dataset...")
+        data = load_breast_cancer()
+        x_raw, y_raw = data.data, data.target
+
     x_train, x_test, y_train, y_test = train_test_split(
-        data.data, data.target, test_size=0.2, random_state=42, stratify=data.target
+        x_raw, y_raw, test_size=0.2, random_state=42, stratify=y_raw
     )
     scaler = StandardScaler()
     x_train = scaler.fit_transform(x_train).astype("float32")

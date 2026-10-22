@@ -45,8 +45,9 @@ tf.random.set_seed(42)
 def experiment_6_basic_autoencoder():
     """Compress and reconstruct MNIST digit images with a dense autoencoder."""
     (x_train, _), (x_test, _) = keras.datasets.mnist.load_data()
-    x_train = x_train.astype("float32").reshape(-1, 784) / 255.0
-    x_test = x_test.astype("float32").reshape(-1, 784) / 255.0
+    # Fast demonstration subset
+    x_train = x_train[:6000].astype("float32").reshape(-1, 784) / 255.0
+    x_test = x_test[:1000].astype("float32").reshape(-1, 784) / 255.0
 
     model = keras.Sequential([
         keras.Input(shape=(784,)),
@@ -57,11 +58,11 @@ def experiment_6_basic_autoencoder():
     ])
     model.compile(optimizer="adam", loss="mse")
     model.summary()
-    model.fit(x_train, x_train, epochs=5, batch_size=256, validation_split=0.1, verbose=1)
+    model.fit(x_train, x_train, epochs=3, batch_size=128, validation_split=0.1, verbose=1)
 
     reconstructed = model.predict(x_test[:10], verbose=0)
     reconstruction_mse = np.mean((x_test - model.predict(x_test, batch_size=256, verbose=0)) ** 2)
-    print(f"Test reconstruction MSE: {reconstruction_mse:.6f}")
+    print(f"\n--> Test Reconstruction MSE: {reconstruction_mse:.6f}")
 
     fig, axes = plt.subplots(2, 10, figsize=(13, 3))
     for i in range(10):
@@ -72,7 +73,9 @@ def experiment_6_basic_autoencoder():
         axes[0, i].axis("off")
         axes[1, i].axis("off")
     plt.tight_layout()
-    plt.show()
+    plt.savefig("autoencoder_reconstruction.png")
+    plt.close()
+    print("Reconstruction plot saved to: autoencoder_reconstruction.png")
 
 
 if __name__ == "__main__":

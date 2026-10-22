@@ -9,6 +9,7 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 import numpy as np
 import tensorflow as tf
+import pandas as pd
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -22,15 +23,29 @@ def experiment_9_recommender():
     print("User-Item Embeddings & Precision@K / Recall@K Evaluation")
     print("=" * 65)
 
-    num_users = 100
-    num_items = 50
     embedding_dim = 16
-    num_samples = 1000
+    csv_candidates = ["events.csv", "retailrocket.csv", "ratings.csv", "interactions.csv"]
+    csv_file = next((f for f in csv_candidates if os.path.exists(f)), None)
 
-    # Synthetic user-item interactions
-    user_ids = np.random.randint(0, num_users, (num_samples,))
-    item_ids = np.random.randint(0, num_items, (num_samples,))
-    ratings = np.random.choice([0.0, 1.0], size=(num_samples,), p=[0.7, 0.3])
+    if csv_file:
+        print(f"[Data Source] Found local CSV file: '{csv_file}' -> Training on CSV interactions...")
+        df = pd.read_csv(csv_file).dropna().head(3000)
+        # Find user and item columns
+        user_col = next((c for c in ["visitorid", "userId", "user_id", "user"] if c in df.columns), df.columns[0])
+        item_col = next((c for c in ["itemid", "itemId", "item_id", "item"] if c in df.columns), df.columns[1])
+        user_ids = pd.factorize(df[user_col])[0]
+        item_ids = pd.factorize(df[item_col])[0]
+        num_users = int(user_ids.max() + 1)
+        num_items = int(item_ids.max() + 1)
+        ratings = np.ones(len(user_ids), dtype="float32")
+    else:
+        print("[Data Source] No local CSV found -> Generating synthetic Retailrocket interaction dataset...")
+        num_users = 100
+        num_items = 50
+        num_samples = 1000
+        user_ids = np.random.randint(0, num_users, (num_samples,))
+        item_ids = np.random.randint(0, num_items, (num_samples,))
+        ratings = np.random.choice([0.0, 1.0], size=(num_samples,), p=[0.7, 0.3])
 
     # Build Embedding Model
     user_in = keras.Input(shape=(1,), name="user")

@@ -35,7 +35,7 @@ python -c "import tensorflow as tf, numpy, sklearn, pandas, matplotlib; print('T
 
 1. Open PowerShell or Command Prompt inside this folder:
    ```powershell
-   cd "c:\Users\Somil\OneDrive\Desktop\Dl practicals"
+   cd "c:\Users\Somil\OneDrive\Desktop\Dl practicals\Dl-prac"
    ```
 
 2. Run the desired practical file directly using `python`:
@@ -79,8 +79,29 @@ python -c "import tensorflow as tf, numpy, sklearn, pandas, matplotlib; print('T
 
 ---
 
-## 💡 Notes for Lab Practicals and Viva Examinations
+## 💡 Notes for Lab Practicals, Viva & CSV Datasets
 
-1. **Self-Contained Execution**: All practicals are configured to run completely offline without relying on multi-gigabyte external file downloads that may freeze or fail under college network firewalls.
-2. **Clean Output**: TensorFlow informational logs (`oneDNN`, `AVX2`, etc.) are suppressed using `TF_CPP_MIN_LOG_LEVEL = '2'` so only clean training progress and evaluation tables appear in your terminal.
-3. **Execution Speed**: Every script is optimized to finish training in **10 to 30 seconds** on any standard laptop CPU.
+### 📂 How CSV Files Work (Automatic Detection)
+If your examiner or professor provides a dataset in the form of a `.csv` file:
+1. **Where to place it?** Simply paste the `.csv` file directly into the `Dl-prac/` folder alongside the python scripts.
+2. **Will it work?** **YES!** The scripts have **built-in auto-detection**:
+   - If a `.csv` file is placed in `Dl-prac/`, the script automatically detects it, loads it with `pandas`, and trains on it.
+   - If **NO `.csv` file** is placed, the script automatically uses scikit-learn built-in datasets or self-contained benchmark generators without crashing.
+   - You don't have to edit any code!
+
+| Practical | Recognized CSV Filenames | Fallback if CSV is not present |
+| :--- | :--- | :--- |
+| **Prac 2 (California Housing)** | `housing.csv`, `california_housing.csv`, `data.csv` | Scikit-learn California Housing |
+| **Prac 9 (Recommendation)** | `events.csv`, `retailrocket.csv`, `ratings.csv` | User-Item Interaction Matrix |
+| **Prac 10 (Sentiment Network)** | `sentiment140.csv`, `tweets.csv` | Interaction Network & Benchmark Sentences |
+| **Prac 14 (Breast Cancer)** | `breast_cancer.csv`, `cancer.csv`, `data.csv` | Scikit-learn Wisconsin Breast Cancer |
+| **Prac 15 (Wine Classification)** | `wine.csv`, `winequality.csv`, `data.csv` | Scikit-learn Wine Dataset (3 classes) |
+| **Prac 16 (Jena Climate Series)**| `jena_climate_2009_2016.csv`, `temperature.csv` | 24-Hour Periodic Climate Simulator |
+| **Prac 24 (Credit Card Fraud)** | `creditcard.csv`, `fraud.csv`, `transactions.csv` | Normal vs Fraud Transaction Simulator |
+
+---
+
+## ⚡ Execution Features
+1. **Self-Contained & Fast**: Optimized to finish in **10 to 30 seconds** on standard CPU.
+2. **Clean Output**: Suppresses verbose oneDNN / AVX2 warning logs for clean evaluation tables and metrics.
+3. **Stand-Alone**: Every script contains its own `if __name__ == "__main__":` entrypoint.
